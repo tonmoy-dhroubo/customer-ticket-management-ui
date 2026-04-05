@@ -8,12 +8,12 @@ import { toast } from 'sonner'
 import { api } from '@/lib/api'
 import { clearAuthSession, getAccessToken, getAuthType } from '@/lib/auth-storage'
 import { Ticket } from '@/types'
+import { AppLoader } from '@/components/app-loader'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
-import { Skeleton } from '@/components/ui/skeleton'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Textarea } from '@/components/ui/textarea'
 import { cn } from '@/lib/utils'
@@ -34,6 +34,7 @@ export function CustomerTicketApp() {
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [loading, setLoading] = useState(true)
+  const [initialized, setInitialized] = useState(false)
   const [submitting, setSubmitting] = useState(false)
 
   const stats = useMemo(() => {
@@ -66,6 +67,7 @@ export function CustomerTicketApp() {
       toast.error(message)
     } finally {
       setLoading(false)
+      setInitialized(true)
     }
   }
 
@@ -135,6 +137,10 @@ export function CustomerTicketApp() {
     return 'bg-zinc-100 text-zinc-700 border-zinc-200'
   }
 
+  if (loading && !initialized) {
+    return <AppLoader title="Loading Customer Portal" subtitle="Bringing your tickets and latest status updates..." />
+  }
+
   return (
     <main className="relative min-h-screen overflow-hidden bg-gradient-to-b from-slate-50 via-background to-background">
       <div className="pointer-events-none absolute -left-16 top-16 h-56 w-56 rounded-full bg-sky-200/35 blur-3xl" />
@@ -175,7 +181,7 @@ export function CustomerTicketApp() {
             <Card className="border-zinc-200/80 shadow-none lg:col-span-2">
               <CardContent className="p-4">
                 <p className="text-xs uppercase tracking-wide text-muted-foreground">Signed In As</p>
-                <p className="mt-1 text-lg font-semibold">{loading ? 'Loading profile...' : customer?.name ?? 'Customer'}</p>
+                <p className="mt-1 text-lg font-semibold">{customer?.name ?? 'Customer'}</p>
                 <p className="text-sm text-muted-foreground">{customer?.email ?? 'Signed in customer account'}</p>
               </CardContent>
             </Card>
@@ -280,14 +286,7 @@ export function CustomerTicketApp() {
             <CardDescription>Latest tickets you created with real-time status and AI metadata.</CardDescription>
           </CardHeader>
           <CardContent>
-            {loading ? (
-              <div className="space-y-2">
-                <Skeleton className="h-11 w-full" />
-                <Skeleton className="h-11 w-full" />
-                <Skeleton className="h-11 w-full" />
-              </div>
-            ) : (
-              <>
+            <>
                 <div className="hidden rounded-xl border md:block">
                   <Table>
                     <TableHeader>
@@ -351,7 +350,6 @@ export function CustomerTicketApp() {
                   </div>
                 )}
               </>
-            )}
           </CardContent>
         </Card>
       </div>

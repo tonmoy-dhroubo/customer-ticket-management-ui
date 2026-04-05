@@ -1,14 +1,15 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { type ReactNode, useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { LogOutIcon, MenuIcon, PlusIcon, RefreshCwIcon, ShieldCheckIcon } from 'lucide-react'
+import { AlertTriangleIcon, ClipboardListIcon, LogOutIcon, MenuIcon, PlusIcon, RefreshCwIcon, ShieldCheckIcon, UserRoundIcon, Users2Icon } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { api } from '@/lib/api'
 import { clearAuthSession, getAccessToken, getAuthType } from '@/lib/auth-storage'
 import { Category, Customer, Ticket, TicketPriority, TicketStatus, User } from '@/types'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { AppLoader } from '@/components/app-loader'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -19,10 +20,10 @@ import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet'
-import { Skeleton } from '@/components/ui/skeleton'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Textarea } from '@/components/ui/textarea'
+import { cn } from '@/lib/utils'
 
 type TabKey = 'overview' | 'tickets' | 'users' | 'customers'
 
@@ -56,6 +57,7 @@ export function TicketAdminApp() {
   const [roles, setRoles] = useState<RoleLite[]>([])
 
   const [loading, setLoading] = useState(true)
+  const [initialized, setInitialized] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -141,6 +143,7 @@ export function TicketAdminApp() {
       setError(message)
     } finally {
       setLoading(false)
+      setInitialized(true)
     }
   }
 
@@ -281,20 +284,27 @@ export function TicketAdminApp() {
     }
   }
 
+  if (loading && !initialized) {
+    return <AppLoader title="Loading Admin Portal" subtitle="Syncing tickets, users, customers, and categories..." />
+  }
+
   return (
-    <div className="flex min-h-screen bg-background">
-      <aside className="hidden w-64 border-r bg-card lg:flex lg:flex-col">
+    <div className="flex min-h-screen bg-gradient-to-b from-zinc-50 via-background to-background">
+      <aside className="hidden w-64 border-r bg-gradient-to-b from-zinc-950 via-zinc-900 to-zinc-900 text-zinc-100 lg:flex lg:flex-col">
         <div className="flex flex-col gap-2 p-4">
-          <p className="text-xs uppercase tracking-wide text-muted-foreground">Admin Portal</p>
+          <p className="text-xs uppercase tracking-[0.18em] text-zinc-400">Admin Portal</p>
           <h1 className="font-heading text-lg font-semibold">AI Ticket Manager</h1>
         </div>
-        <Separator />
+        <Separator className="bg-zinc-800" />
         <div className="flex flex-col gap-1 p-2">
           {tabItems.map((item) => (
             <Button
               key={item.key}
               variant={activeTab === item.key ? 'secondary' : 'ghost'}
-              className="justify-start"
+              className={cn(
+                'justify-start text-zinc-100 hover:bg-zinc-800 hover:text-white',
+                activeTab === item.key && 'bg-zinc-100 text-zinc-950 hover:bg-zinc-200',
+              )}
               onClick={() => setActiveTab(item.key)}
             >
               {item.label}
@@ -328,7 +338,7 @@ export function TicketAdminApp() {
       </Sheet>
 
       <main className="flex flex-1 flex-col">
-        <header className="sticky top-0 z-10 border-b bg-background/95 backdrop-blur-sm">
+        <header className="sticky top-0 z-10 border-b bg-background">
           <div className="flex items-center justify-between gap-2 px-4 py-3 lg:px-6">
             <div className="flex items-center gap-2">
               <Button size="icon-sm" variant="outline" className="lg:hidden" onClick={() => setMobileNavOpen(true)}>
@@ -358,7 +368,7 @@ export function TicketAdminApp() {
 
         <div className="flex flex-1 flex-col gap-4 p-4 lg:p-6">
           {currentUser && (
-            <Alert>
+            <Alert className="border-zinc-200 bg-white/80 shadow-sm">
               <ShieldCheckIcon data-icon="inline-start" />
               <AlertTitle>Authenticated as {currentUser.name}</AlertTitle>
               <AlertDescription>{currentUser.role?.name ?? 'Role unavailable'}</AlertDescription>
@@ -372,16 +382,8 @@ export function TicketAdminApp() {
             </Alert>
           )}
 
-          {loading ? (
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-              <Skeleton className="h-24" />
-              <Skeleton className="h-24" />
-              <Skeleton className="h-24" />
-              <Skeleton className="h-24" />
-            </div>
-          ) : (
-            <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as TabKey)}>
-              <TabsList>
+          <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as TabKey)}>
+              <TabsList className="w-full justify-start overflow-x-auto">
                 {tabItems.map((item) => (
                   <TabsTrigger key={item.key} value={item.key}>
                     {item.label}
@@ -391,13 +393,13 @@ export function TicketAdminApp() {
 
               <TabsContent value="overview" className="flex flex-col gap-4">
                 <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-                  <MetricCard label="Total Tickets" value={stats.totalTickets} />
-                  <MetricCard label="Open Tickets" value={stats.openCount} />
-                  <MetricCard label="High Priority" value={stats.highPriorityCount} />
-                  <MetricCard label="Users" value={stats.totalUsers} />
-                  <MetricCard label="Customers" value={stats.totalCustomers} />
+                  <MetricCard label="Total Tickets" value={stats.totalTickets} icon={<ClipboardListIcon className="size-4" />} tone="neutral" />
+                  <MetricCard label="Open Tickets" value={stats.openCount} icon={<AlertTriangleIcon className="size-4" />} tone="warning" />
+                  <MetricCard label="High Priority" value={stats.highPriorityCount} icon={<AlertTriangleIcon className="size-4" />} tone="danger" />
+                  <MetricCard label="Users" value={stats.totalUsers} icon={<Users2Icon className="size-4" />} tone="cool" />
+                  <MetricCard label="Customers" value={stats.totalCustomers} icon={<UserRoundIcon className="size-4" />} tone="mint" />
                 </div>
-                <Card>
+                <Card className="border-zinc-200 shadow-sm">
                   <CardHeader>
                     <CardTitle>Recent Tickets</CardTitle>
                     <CardDescription>Latest 5 tickets created in the system.</CardDescription>
@@ -409,7 +411,7 @@ export function TicketAdminApp() {
               </TabsContent>
 
               <TabsContent value="tickets" className="flex flex-col gap-4">
-                <Card>
+                <Card className="border-zinc-200 shadow-sm">
                   <CardHeader>
                     <CardTitle>All Tickets</CardTitle>
                     <CardDescription>Admins can override AI output, update status, and reassign ownership.</CardDescription>
@@ -421,7 +423,7 @@ export function TicketAdminApp() {
               </TabsContent>
 
               <TabsContent value="users" className="grid gap-4 xl:grid-cols-[1.1fr_1fr]">
-                <Card>
+                <Card className="border-zinc-200 shadow-sm">
                   <CardHeader>
                     <CardTitle>Users</CardTitle>
                     <CardDescription>Manage admin and agent accounts.</CardDescription>
@@ -455,7 +457,7 @@ export function TicketAdminApp() {
                   </CardContent>
                 </Card>
 
-                <Card>
+                <Card className="border-zinc-200 shadow-sm">
                   <CardHeader>
                     <CardTitle>Create User</CardTitle>
                     <CardDescription>Create a new user and assign a role.</CardDescription>
@@ -522,7 +524,7 @@ export function TicketAdminApp() {
               </TabsContent>
 
               <TabsContent value="customers" className="grid gap-4 xl:grid-cols-[1.1fr_1fr]">
-                <Card>
+                <Card className="border-zinc-200 shadow-sm">
                   <CardHeader>
                     <CardTitle>Customers</CardTitle>
                     <CardDescription>Customer profiles used for support history and ownership.</CardDescription>
@@ -549,7 +551,7 @@ export function TicketAdminApp() {
                   </CardContent>
                 </Card>
 
-                <Card>
+                <Card className="border-zinc-200 shadow-sm">
                   <CardHeader>
                     <CardTitle>Create Customer</CardTitle>
                     <CardDescription>Add a customer for future ticket associations.</CardDescription>
@@ -591,7 +593,6 @@ export function TicketAdminApp() {
                 </Card>
               </TabsContent>
             </Tabs>
-          )}
         </div>
       </main>
 
@@ -792,12 +793,33 @@ export function TicketAdminApp() {
   )
 }
 
-function MetricCard({ label, value }: { label: string; value: number }) {
+function MetricCard({
+  label,
+  value,
+  icon,
+  tone,
+}: {
+  label: string
+  value: number
+  icon: ReactNode
+  tone: 'neutral' | 'warning' | 'danger' | 'cool' | 'mint'
+}) {
+  const toneClass = {
+    neutral: 'bg-zinc-50 border-zinc-200',
+    warning: 'bg-amber-50 border-amber-200',
+    danger: 'bg-red-50 border-red-200',
+    cool: 'bg-sky-50 border-sky-200',
+    mint: 'bg-emerald-50 border-emerald-200',
+  }[tone]
+
   return (
-    <Card>
+    <Card className={cn('shadow-sm', toneClass)}>
       <CardHeader>
+        <div className="mb-2 inline-flex size-7 items-center justify-center rounded-full bg-white/80 text-zinc-700">
+          {icon}
+        </div>
         <CardDescription>{label}</CardDescription>
-        <CardTitle className="text-2xl">{value}</CardTitle>
+        <CardTitle className="text-2xl font-semibold">{value}</CardTitle>
       </CardHeader>
       <CardFooter>
         <p className="text-xs text-muted-foreground">Live data from API</p>
@@ -823,14 +845,27 @@ function TicketsTable({ tickets, onEdit }: { tickets: Ticket[]; onEdit: (ticket:
       <TableBody>
         {tickets.map((ticket) => (
           <TableRow key={ticket.id}>
-            <TableCell>{ticket.title}</TableCell>
-            <TableCell>{ticket.category?.name ?? `#${ticket.categoryId}`}</TableCell>
+            <TableCell className="font-medium">{ticket.title}</TableCell>
+            <TableCell>
+              <Badge variant="outline">{ticket.category?.name ?? `#${ticket.categoryId}`}</Badge>
+            </TableCell>
             <TableCell>
               <Badge variant={priorityVariant(ticket.priority)}>{ticket.priority}</Badge>
             </TableCell>
-            <TableCell>{ticket.status}</TableCell>
-            <TableCell>{Math.round(Number(ticket.aiConfidence) * 100)}%</TableCell>
-            <TableCell className="max-w-xs truncate">{ticket.summary ?? 'No summary'}</TableCell>
+            <TableCell>
+              <Badge variant="outline" className={statusClass(ticket.status)}>
+                {ticket.status.replace('_', ' ')}
+              </Badge>
+            </TableCell>
+            <TableCell>
+              <div className="flex items-center gap-2">
+                <div className="h-2 w-16 overflow-hidden rounded-full bg-zinc-200">
+                  <div className="h-full rounded-full bg-zinc-900" style={{ width: `${Math.round(Number(ticket.aiConfidence) * 100)}%` }} />
+                </div>
+                <span className="text-xs text-muted-foreground">{Math.round(Number(ticket.aiConfidence) * 100)}%</span>
+              </div>
+            </TableCell>
+            <TableCell className="max-w-xs truncate text-muted-foreground">{ticket.summary ?? 'No summary'}</TableCell>
             <TableCell>
               <Button variant="outline" size="sm" onClick={() => onEdit(ticket)}>Manage</Button>
             </TableCell>
@@ -851,6 +886,22 @@ function priorityVariant(priority: TicketPriority): 'default' | 'secondary' | 'd
   }
 
   return 'secondary'
+}
+
+function statusClass(status: TicketStatus): string {
+  if (status === 'OPEN') {
+    return 'bg-amber-100 text-amber-800 border-amber-200'
+  }
+
+  if (status === 'IN_PROGRESS') {
+    return 'bg-blue-100 text-blue-800 border-blue-200'
+  }
+
+  if (status === 'RESOLVED') {
+    return 'bg-emerald-100 text-emerald-800 border-emerald-200'
+  }
+
+  return 'bg-zinc-100 text-zinc-700 border-zinc-200'
 }
 
 function initials(name: string): string {
