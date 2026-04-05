@@ -112,6 +112,8 @@ export function TicketAdminApp() {
     ticketForm.customerId === 'none'
       ? 'No customer'
       : customers.find((customer) => String(customer.id) === ticketForm.customerId)?.name
+  const selectedCategoryName = categories.find((category) => String(category.id) === editTicketForm.categoryId)?.name
+  const selectedAssigneeName = users.find((user) => String(user.id) === editTicketForm.assignedTo)?.name
 
   const loadData = async () => {
     setLoading(true)
@@ -761,7 +763,7 @@ export function TicketAdminApp() {
                   onValueChange={(value) => setEditTicketForm((prev) => ({ ...prev, categoryId: value ?? '' }))}
                 >
                   <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select category" />
+                    {selectedCategoryName ? selectedCategoryName : <SelectValue placeholder="Select category" />}
                   </SelectTrigger>
                   <SelectContent>
                     <SelectGroup>
@@ -781,7 +783,7 @@ export function TicketAdminApp() {
                   onValueChange={(value) => setEditTicketForm((prev) => ({ ...prev, assignedTo: value ?? '' }))}
                 >
                   <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select assignee" />
+                    {selectedAssigneeName ? selectedAssigneeName : <SelectValue placeholder="Select assignee" />}
                   </SelectTrigger>
                   <SelectContent>
                     <SelectGroup>
