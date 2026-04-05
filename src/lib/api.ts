@@ -55,6 +55,18 @@ export const api = {
     createdBy: number
     customerId?: number
   }) => request<Ticket>('/tickets', { method: 'POST', body: JSON.stringify(payload) }),
+  classifyTicketPreview: (payload: { title: string; description: string }) =>
+    request<{
+      categoryId: number
+      categoryName: string
+      priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT'
+      confidence: number
+      source: 'MOCK' | 'GEMINI'
+      summary: string
+      assignmentRole: string
+      suggestedAssigneeId: number | null
+      suggestedAssigneeName: string | null
+    }>('/tickets/classify', { method: 'POST', body: JSON.stringify(payload) }),
   createCustomerTicket: (payload: { title: string; description: string }) =>
     request<Ticket>('/tickets/customer/me', { method: 'POST', body: JSON.stringify(payload) }),
   updateTicket: (ticketId: number, payload: {

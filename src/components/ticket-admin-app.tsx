@@ -60,7 +60,17 @@ export function TicketAdminApp() {
   const [loading, setLoading] = useState(true)
   const [initialized, setInitialized] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const [classifying, setClassifying] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [ticketPreview, setTicketPreview] = useState<{
+    categoryName: string
+    priority: TicketPriority
+    confidence: number
+    source: 'MOCK' | 'GEMINI'
+    summary: string
+    assignmentRole: string
+    suggestedAssigneeName: string | null
+  } | null>(null)
 
   const [ticketForm, setTicketForm] = useState({
     title: '',
@@ -203,6 +213,7 @@ export function TicketAdminApp() {
         description: '',
         customerId: 'none',
       }))
+      setTicketPreview(null)
       setTicketDialogOpen(false)
       await loadData()
     } catch (createError) {
@@ -210,6 +221,42 @@ export function TicketAdminApp() {
       toast.error(message)
     } finally {
       setSubmitting(false)
+    }
+  }
+
+  const handleClassifyPreview = async () => {
+    if (!ticketForm.title.trim() || !ticketForm.description.trim()) {
+      toast.error('Please provide both title and description first.')
+      return
+    }
+
+    if (ticketForm.description.trim().length < 8) {
+      toast.error('Description should be at least 8 characters for classification.')
+      return
+    }
+
+    setClassifying(true)
+    try {
+      const result = await api.classifyTicketPreview({
+        title: ticketForm.title,
+        description: ticketForm.description,
+      })
+
+      setTicketPreview({
+        categoryName: result.categoryName,
+        priority: result.priority,
+        confidence: result.confidence,
+        source: result.source,
+        summary: result.summary,
+        assignmentRole: result.assignmentRole,
+        suggestedAssigneeName: result.suggestedAssigneeName,
+      })
+      toast.success('Classification preview generated.')
+    } catch (previewError) {
+      const message = previewError instanceof Error ? previewError.message : 'Failed to classify ticket.'
+      toast.error(message)
+    } finally {
+      setClassifying(false)
     }
   }
 
@@ -622,11 +669,19 @@ export function TicketAdminApp() {
         </div>
       </main>
 
-      <Dialog open={ticketDialogOpen} onOpenChange={setTicketDialogOpen}>
+      <Dialog
+        open={ticketDialogOpen}
+        onOpenChange={(open) => {
+          setTicketDialogOpen(open)
+          if (!open) {
+            setTicketPreview(null)
+          }
+        }}
+      >
         <DialogContent className="sm:max-w-xl">
           <DialogHeader>
             <DialogTitle>Create Ticket</DialogTitle>
-            <DialogDescription>Ticket will be auto-classified by the backend mock AI service.</DialogDescription>
+            <DialogDescription>Preview AI classification first, then create the ticket.</DialogDescription>
           </DialogHeader>
 
           <form id="create-ticket-form" onSubmit={handleCreateTicket} className="flex flex-col gap-4">
@@ -636,7 +691,10 @@ export function TicketAdminApp() {
                 <Input
                   id="ticket-title"
                   value={ticketForm.title}
-                  onChange={(event) => setTicketForm((prev) => ({ ...prev, title: event.target.value }))}
+                  onChange={(event) => {
+                    setTicketPreview(null)
+                    setTicketForm((prev) => ({ ...prev, title: event.target.value }))
+                  }}
                   required
                 />
               </Field>
@@ -646,10 +704,34 @@ export function TicketAdminApp() {
                   id="ticket-description"
                   rows={5}
                   value={ticketForm.description}
-                  onChange={(event) => setTicketForm((prev) => ({ ...prev, description: event.target.value }))}
+                  onChange={(event) => {
+                    setTicketPreview(null)
+                    setTicketForm((prev) => ({ ...prev, description: event.target.value }))
+                  }}
                   required
                 />
               </Field>
+              <div className="flex justify-end">
+                <Button type="button" variant="outline" onClick={handleClassifyPreview} disabled={classifying}>
+                  {classifying ? 'Classifying...' : 'Classify Now'}
+                </Button>
+              </div>
+              {ticketPreview && (
+                <div className="rounded-lg border bg-zinc-50 p-3">
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">AI Preview</p>
+                  <div className="mt-2 grid gap-2 text-sm md:grid-cols-2">
+                    <p><span className="font-medium">Category:</span> {ticketPreview.categoryName}</p>
+                    <p><span className="font-medium">Priority:</span> {ticketPreview.priority}</p>
+                    <p><span className="font-medium">Confidence:</span> {Math.round(ticketPreview.confidence * 100)}%</p>
+                    <p><span className="font-medium">Source:</span> {ticketPreview.source}</p>
+                    <p><span className="font-medium">Assignment Role:</span> {ticketPreview.assignmentRole}</p>
+                    <p><span className="font-medium">Suggested Assignee:</span> {ticketPreview.suggestedAssigneeName ?? 'Unassigned'}</p>
+                  </div>
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    <span className="font-medium text-foreground">Summary:</span> {ticketPreview.summary}
+                  </p>
+                </div>
+              )}
               <Field>
                 <FieldLabel>Created By</FieldLabel>
                 <Select
