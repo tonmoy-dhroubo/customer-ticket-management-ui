@@ -9,6 +9,7 @@ import { api } from '@/lib/api'
 import { clearAuthSession, getAccessToken, getAuthType } from '@/lib/auth-storage'
 import { Category, Customer, Ticket, TicketPriority, TicketStatus, User } from '@/types'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { AppLogo } from '@/components/app-logo'
 import { AppLoader } from '@/components/app-loader'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
@@ -293,7 +294,7 @@ export function TicketAdminApp() {
       <aside className="hidden w-64 border-r bg-gradient-to-b from-zinc-950 via-zinc-900 to-zinc-900 text-zinc-100 lg:flex lg:flex-col">
         <div className="flex flex-col gap-2 p-4">
           <p className="text-xs uppercase tracking-[0.18em] text-zinc-400">Admin Portal</p>
-          <h1 className="font-heading text-lg font-semibold">AI Ticket Manager</h1>
+          <AppLogo className="[&_p:last-child]:text-zinc-400" />
         </div>
         <Separator className="bg-zinc-800" />
         <div className="flex flex-col gap-1 p-2">
@@ -316,7 +317,9 @@ export function TicketAdminApp() {
       <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
         <SheetContent side="left">
           <SheetHeader>
-            <SheetTitle>AI Ticket Manager</SheetTitle>
+            <SheetTitle>
+              <AppLogo />
+            </SheetTitle>
             <SheetDescription>Navigate between admin sections.</SheetDescription>
           </SheetHeader>
           <div className="flex flex-col gap-2 p-4">

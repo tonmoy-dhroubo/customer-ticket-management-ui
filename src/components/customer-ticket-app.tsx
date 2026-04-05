@@ -8,6 +8,7 @@ import { toast } from 'sonner'
 import { api } from '@/lib/api'
 import { clearAuthSession, getAccessToken, getAuthType } from '@/lib/auth-storage'
 import { Ticket } from '@/types'
+import { AppLogo } from '@/components/app-logo'
 import { AppLoader } from '@/components/app-loader'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -157,6 +158,7 @@ export function CustomerTicketApp() {
                   Submit tickets, track updates, and see how AI classified your requests.
                 </p>
               </div>
+              <AppLogo className="w-full basis-full pt-1 [&_p:first-child]:text-white [&_p:last-child]:text-zinc-300" />
               <div className="flex items-center gap-2">
                 <Button
                   variant="secondary"

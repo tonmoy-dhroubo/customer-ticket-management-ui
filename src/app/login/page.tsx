@@ -7,6 +7,7 @@ import { toast } from 'sonner'
 
 import { api } from '@/lib/api'
 import { getAccessToken, getAuthType, saveAuthSession } from '@/lib/auth-storage'
+import { AppLogo } from '@/components/app-logo'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
@@ -67,6 +68,9 @@ export default function LoginPage() {
     <div className="flex min-h-screen items-center justify-center p-4">
       <Card className="w-full max-w-sm">
         <CardHeader>
+          <div className="mb-2 flex justify-center">
+            <AppLogo />
+          </div>
           <CardTitle>{mode === 'customer' ? 'Customer Login' : 'Admin Login'}</CardTitle>
           <CardDescription>
             {mode === 'customer'
