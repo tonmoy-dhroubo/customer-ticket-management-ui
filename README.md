@@ -63,3 +63,42 @@ Use backend admin credentials from backend `.env`:
 npm run build
 ```
 
+## Deploy To Vercel (Detailed)
+
+### 1. Push frontend repo
+
+Make sure this repo is on GitHub:
+
+- `git@github.com:tonmoy-dhroubo/customer-ticket-management-ui.git`
+
+### 2. Create project on Vercel
+
+1. Go to Vercel dashboard.
+2. Click `Add New...` -> `Project`.
+3. Import `customer-ticket-management-ui`.
+4. Keep framework as `Next.js` (auto-detected).
+
+### 3. Set environment variable
+
+In Project Settings -> Environment Variables, add:
+
+- `NEXT_PUBLIC_API_BASE_URL` = `https://customer-ticket-management-api-production.up.railway.app`
+
+Apply to:
+
+- `Production`
+- `Preview` (recommended)
+
+### 4. Deploy
+
+Click `Deploy`.  
+After env var changes, redeploy latest commit to ensure the build picks up the new value.
+
+### 5. Verify frontend
+
+1. Open deployed URL.
+2. Go to `/login`.
+3. Login with seeded credentials:
+   - `admin@ticket.local`
+   - `admin123456`
+4. Create/update tickets and ensure data reflects in backend.
