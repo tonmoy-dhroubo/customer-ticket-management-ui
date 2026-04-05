@@ -107,6 +107,11 @@ export function TicketAdminApp() {
   }, [customers.length, tickets, users.length])
 
   const isAdmin = currentUser?.role?.name === 'Admin'
+  const selectedCreatorName = users.find((user) => String(user.id) === ticketForm.createdBy)?.name
+  const selectedCustomerName =
+    ticketForm.customerId === 'none'
+      ? 'No customer'
+      : customers.find((customer) => String(customer.id) === ticketForm.customerId)?.name
 
   const loadData = async () => {
     setLoading(true)
@@ -650,7 +655,7 @@ export function TicketAdminApp() {
                   onValueChange={(value) => setTicketForm((prev) => ({ ...prev, createdBy: value ?? '' }))}
                 >
                   <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Choose user" />
+                    {selectedCreatorName ? selectedCreatorName : <SelectValue placeholder="Choose user" />}
                   </SelectTrigger>
                   <SelectContent>
                     <SelectGroup>
@@ -671,7 +676,7 @@ export function TicketAdminApp() {
                   onValueChange={(value) => setTicketForm((prev) => ({ ...prev, customerId: value ?? 'none' }))}
                 >
                   <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Optional customer" />
+                    {selectedCustomerName ? selectedCustomerName : <SelectValue placeholder="Optional customer" />}
                   </SelectTrigger>
                   <SelectContent>
                     <SelectGroup>
