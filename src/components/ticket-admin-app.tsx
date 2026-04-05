@@ -6,6 +6,7 @@ import { LogOutIcon, MenuIcon, PlusIcon, RefreshCwIcon, ShieldCheckIcon } from '
 import { toast } from 'sonner'
 
 import { api } from '@/lib/api'
+import { clearAuthSession, getAccessToken, getAuthType } from '@/lib/auth-storage'
 import { Category, Customer, Ticket, TicketPriority, TicketStatus, User } from '@/types'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -132,7 +133,7 @@ export function TicketAdminApp() {
       const message = loadError instanceof Error ? loadError.message : 'Failed to load data.'
 
       if (message.toLowerCase().includes('unauthorized') || message.toLowerCase().includes('invalid token')) {
-        localStorage.removeItem('ticket_access_token')
+        clearAuthSession()
         router.replace('/login')
         return
       }
@@ -144,7 +145,14 @@ export function TicketAdminApp() {
   }
 
   useEffect(() => {
-    const token = localStorage.getItem('ticket_access_token')
+    const token = getAccessToken()
+    const authType = getAuthType()
+
+    if (authType === 'CUSTOMER') {
+      router.replace('/customer')
+      return
+    }
+
     if (!token) {
       router.replace('/login')
       return
@@ -154,7 +162,7 @@ export function TicketAdminApp() {
   }, [router])
 
   const handleLogout = () => {
-    localStorage.removeItem('ticket_access_token')
+    clearAuthSession()
     router.replace('/login')
   }
 
