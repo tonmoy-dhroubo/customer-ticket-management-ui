@@ -106,6 +106,8 @@ export function TicketAdminApp() {
     }
   }, [customers.length, tickets, users.length])
 
+  const isAdmin = currentUser?.role?.name === 'Admin'
+
   const loadData = async () => {
     setLoading(true)
     setError(null)
@@ -460,70 +462,84 @@ export function TicketAdminApp() {
                   </CardContent>
                 </Card>
 
-                <Card className="border-zinc-200 shadow-sm">
-                  <CardHeader>
-                    <CardTitle>Create User</CardTitle>
-                    <CardDescription>Create a new user and assign a role.</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <form onSubmit={handleCreateUser} className="flex flex-col gap-4">
-                      <FieldGroup>
-                        <Field>
-                          <FieldLabel htmlFor="user-name">Name</FieldLabel>
-                          <Input
-                            id="user-name"
-                            value={userForm.name}
-                            onChange={(event) => setUserForm((prev) => ({ ...prev, name: event.target.value }))}
-                            required
-                          />
-                        </Field>
-                        <Field>
-                          <FieldLabel htmlFor="user-email">Email</FieldLabel>
-                          <Input
-                            id="user-email"
-                            type="email"
-                            value={userForm.email}
-                            onChange={(event) => setUserForm((prev) => ({ ...prev, email: event.target.value }))}
-                            required
-                          />
-                        </Field>
-                        <Field>
-                          <FieldLabel htmlFor="user-password">Password</FieldLabel>
-                          <Input
-                            id="user-password"
-                            type="password"
-                            value={userForm.password}
-                            onChange={(event) => setUserForm((prev) => ({ ...prev, password: event.target.value }))}
-                            required
-                          />
-                        </Field>
-                        <Field>
-                          <FieldLabel>Role</FieldLabel>
-                          <Select
-                            value={userForm.roleId || undefined}
-                            onValueChange={(value) => setUserForm((prev) => ({ ...prev, roleId: value ?? '' }))}
-                          >
-                            <SelectTrigger className="w-full">
-                              <SelectValue placeholder="Choose role" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectGroup>
-                                <SelectLabel>Roles</SelectLabel>
-                                {roles.map((role) => (
-                                  <SelectItem key={role.id} value={String(role.id)}>
-                                    {role.name}
-                                  </SelectItem>
-                                ))}
-                              </SelectGroup>
-                            </SelectContent>
-                          </Select>
-                          <FieldDescription>Optional. If empty, backend assigns Support Team.</FieldDescription>
-                        </Field>
-                      </FieldGroup>
-                      <Button type="submit" disabled={submitting}>Create User</Button>
-                    </form>
-                  </CardContent>
-                </Card>
+                {isAdmin ? (
+                  <Card className="border-zinc-200 shadow-sm">
+                    <CardHeader>
+                      <CardTitle>Create User</CardTitle>
+                      <CardDescription>Create a new user and assign a role.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <form onSubmit={handleCreateUser} className="flex flex-col gap-4">
+                        <FieldGroup>
+                          <Field>
+                            <FieldLabel htmlFor="user-name">Name</FieldLabel>
+                            <Input
+                              id="user-name"
+                              value={userForm.name}
+                              onChange={(event) => setUserForm((prev) => ({ ...prev, name: event.target.value }))}
+                              required
+                            />
+                          </Field>
+                          <Field>
+                            <FieldLabel htmlFor="user-email">Email</FieldLabel>
+                            <Input
+                              id="user-email"
+                              type="email"
+                              value={userForm.email}
+                              onChange={(event) => setUserForm((prev) => ({ ...prev, email: event.target.value }))}
+                              required
+                            />
+                          </Field>
+                          <Field>
+                            <FieldLabel htmlFor="user-password">Password</FieldLabel>
+                            <Input
+                              id="user-password"
+                              type="password"
+                              value={userForm.password}
+                              onChange={(event) => setUserForm((prev) => ({ ...prev, password: event.target.value }))}
+                              required
+                            />
+                          </Field>
+                          <Field>
+                            <FieldLabel>Role</FieldLabel>
+                            <Select
+                              value={userForm.roleId || undefined}
+                              onValueChange={(value) => setUserForm((prev) => ({ ...prev, roleId: value ?? '' }))}
+                            >
+                              <SelectTrigger className="w-full">
+                                <SelectValue placeholder="Choose role" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectGroup>
+                                  <SelectLabel>Roles</SelectLabel>
+                                  {roles.map((role) => (
+                                    <SelectItem key={role.id} value={String(role.id)}>
+                                      {role.name}
+                                    </SelectItem>
+                                  ))}
+                                </SelectGroup>
+                              </SelectContent>
+                            </Select>
+                            <FieldDescription>Optional. If empty, backend assigns Support Team.</FieldDescription>
+                          </Field>
+                        </FieldGroup>
+                        <Button type="submit" disabled={submitting}>Create User</Button>
+                      </form>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <Card className="border-zinc-200 shadow-sm">
+                    <CardHeader>
+                      <CardTitle>Create User</CardTitle>
+                      <CardDescription>Only Admin users can create new internal users.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-muted-foreground">
+                        Contact an Admin account if you need a new user created.
+                      </p>
+                    </CardContent>
+                  </Card>
+                )}
               </TabsContent>
 
               <TabsContent value="customers" className="grid gap-4 xl:grid-cols-[1.1fr_1fr]">
